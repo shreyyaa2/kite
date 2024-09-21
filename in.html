@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: grey;
+            margin: 0;
+            padding: 20px;
+        }
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .employee-card {
+            background-color: lightgray;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            width: 200px;
+            text-align: center;
+            position: relative;
+        }
+        .employee-card h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .employee-card p {
+            margin: 5px 0;
+            font-size: large;
+            font-weight: bolder;
+        }
+        .status-on-leave {
+            color: brown;
+            font-weight: bold;
+            background: white;
+        }
+        .status-absent {
+            color: red;
+        }
+        .status-extended-break-time {
+            color: orange;
+            font-weight: bold;
+            background: white;
+        }
+        .status-working {
+            color: green;
+        }
+        .notification {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f44336;
+            color: #fff;
+            padding: 35px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+            font-weight: bolder;
+            font-size: larger;
+            display: flex;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .notification.critical {
+            background-color: white;
+            font-weight: bold;
+        }
+        .notification .icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .fire-alert {
+            background-color: red;
+            color: yellow;
+            font-weight: bold;
+            font-size: xx-large;
+            display: none;
+            padding: 40px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            border: 5px solid yellow;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Employee Management Dashboard</h1>
+    <div id="employeeDashboard" class="dashboard"></div>
+
+    <div id="notification" class="notification">
+        <div class="icon">&#128276;</div>
+        <div class="message"></div>
+    </div>
+
+    <div id="fireAlert" class="fire-alert">
+        &#9889; FIRE ALERT! &#9889;
+        EVACUATE IMMEDIATELY!
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:7000');
+        const employeeDashboard = document.getElementById('employeeDashboard');
+        const notificationDiv = document.getElementById('notification');
+        const notificationMessage = notificationDiv.querySelector('.message');
+        const fireAlertDiv = document.getElementById('fireAlert');
+
+        const employees = [
+        { name: 'John Doe', department: 'HR', status: 'Working' },
+  { name: 'Jane Smith', department: 'Engineering', status: 'Working' },
+  { name: 'Sam Wilson', department: 'Marketing', status: 'Working' },
+  { name: 'Emily Davis', department: 'Finance', status: 'Working' },
+  { name: 'Michael Brown', department: 'Sales', status: 'Working' },
+  { name: 'Sarah Johnson', department: 'Legal', status: 'Working' },
+  { name: 'Chris Lee', department: 'IT', status: 'Working' },
+  { name: 'Anna Miller', department: 'Product', status: 'Working' },
+  { name: 'David Garcia', department: 'Support', status: 'Working' },
+  { name: 'Laura Martinez', department: 'Operations', status: 'Working' },
+  { name: 'Robert Wilson', department: 'R&D', status: 'Working' },
+  { name: 'Lisa Hernandez', department: 'Marketing', status: 'Working' },
+  { name: 'James Anderson', department: 'HR', status: 'Working' },
+  { name: 'Mary White', department: 'Finance', status: 'Working' },
+  { name: 'Paul Thompson', department: 'Engineering', status: 'Working' },
+  { name: 'Nancy Lewis', department: 'Product', status: 'Working' },
+  { name: 'Gary Young', department: 'Sales', status: 'Working' },
+  { name: 'Sandra Hall', department: 'Support', status: 'Working' },
+  { name: 'Kenneth Scott', department: 'IT', status: 'Working' },
+  { name: 'Betty King', department: 'Legal', status: 'Working' },
+  { name: 'Daniel Wright', department: 'R&D', status: 'Working' },
+  { name: 'Karen Green', department: 'Operations', status: 'Working' },
+  { name: 'Joseph Adams', department: 'Marketing', status: 'Working' },
+  { name: 'Dorothy Baker', department: 'HR', status: 'Working' },
+  { name: 'Mark Nelson', department: 'Finance', status: 'Working' },
+  { name: 'Margaret Carter', department: 'Engineering', status: 'Working' },
+  { name: 'Steven Mitchell', department: 'Product', status: 'Working' },
+  { name: 'Elizabeth Perez', department: 'Sales', status: 'Working' },
+  { name: 'Charles Turner', department: 'Support', status: 'Working' },
+  { name: 'Jessica Phillips', department: 'IT', status: 'Working' },
+  { name: 'Pauline Evans', department: 'Legal', status: 'Working' },
+  { name: 'Matthew Collins', department: 'R&D', status: 'Working' },
+  { name: 'Emily Morris', department: 'Operations', status: 'Working' },
+  { name: 'Andrew Rogers', department: 'Marketing', status: 'Working' },
+  { name: 'Ashley Murphy', department: 'HR', status: 'Working' },
+  { name: 'Brian Bailey', department: 'Finance', status: 'Working' },
+  { name: 'Karen Cooper', department: 'Engineering', status: 'Working' },
+  { name: 'John Reed', department: 'Product', status: 'Working' },
+  { name: 'Jessica Stewart', department: 'Sales', status: 'Working' },
+  { name: 'David Morgan', department: 'Support', status: 'Working' },
+  { name: 'Linda Cook', department: 'IT', status: 'Working' },
+  { name: 'Richard Murphy', department: 'Legal', status: 'Working' },
+  { name: 'Nancy Rogers', department: 'R&D', status: 'Working' },
+  { name: 'George Price', department: 'Operations', status: 'Working' },
+  { name: 'Deborah Diaz', department: 'Marketing', status: 'Working' },
+  { name: 'James Foster', department: 'HR', status: 'Working' },
+  { name: 'Nancy Perry', department: 'Finance', status: 'Working' },
+  { name: 'Robert Hughes', department: 'Engineering', status: 'Working' },
+  { name: 'Sandra Ramirez', department: 'Product', status: 'Working' }
+];
+
+        function updateEmployeeDashboard() {
+            employeeDashboard.innerHTML = '';
+            employees.forEach(employee => {
+                const card = document.createElement('div');
+                const statusClass = employee.status.replace(' ', '-').toLowerCase();
+                card.className = `employee-card status-${statusClass}`;
+                card.innerHTML = `
+                    <h3>${employee.name}</h3>
+                    <p>Department: ${employee.department}</p>
+                    <p>Status: ${employee.status}</p>
+                    ${employee.status === 'Absent' ? '<p>Shift duty missed</p>' : ''}
+                `;
+                employeeDashboard.appendChild(card);
+            });
+        }
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'employee_event') {
+                const { name, status } = data.employee;
+
+                const employee = employees.find(emp => emp.name === name);
+                if (employee) {
+                    if (data.message.includes('Extended break time')) {
+                        employee.status = 'Extended Break Time';
+                    } else {
+                        employee.status = status;
+                    }
+                }
+
+                showNotification(`${name}: ${data.message}`, 'employee');
+            }
+
+            updateEmployeeDashboard();
+        };
+
+        function showNotification(message, type) {
+            notificationMessage.textContent = message;
+            notificationDiv.className = `notification ${type}`;
+            notificationDiv.style.display = 'flex';
+            setTimeout(() => {
+                notificationDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        ws.onclose = () => {
+            console.log('WebSocket connection closed.');
+        };
+
+        // Fire alert function
+        function triggerFireAlert() {
+            fireAlertDiv.style.display = 'block';
+
+            // Hide the fire alert after 10 seconds
+            setTimeout(() => {
+                fireAlertDiv.style.display = 'none';
+
+                // Resume normal alerts after 10 seconds
+                setTimeout(() => {
+                    showNotification('Normal alerts resumed', 'critical');
+                }, 10000);
+            }, 10000);
+        }
+
+        // Show fire alert immediately at the start
+        triggerFireAlert();
+
+        // Initialize the dashboard
+        updateEmployeeDashboard();
+    </script>
+</body>
+</html>

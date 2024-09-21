@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Rewards System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: lightcyan;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        /* Flexbox layout for employee cards */
+        .employee-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        /* Employee card style */
+        .employee-card {
+            background-color: black;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 250px;
+            text-align: center;
+        }
+
+        .employee-card h2 {
+            color: #4CAF50;
+            font-size: 22px;
+        }
+
+        .employee-card p {
+            margin: 10px 0;
+        }
+
+        /* Badge Icon */
+        .badge {
+            cursor: pointer;
+            color: burlywood;
+            font-size: 24px;
+        }
+
+        /* Popup Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            color: #4CAF50;
+        }
+
+        .modal p {
+            margin: 10px 0;
+        }
+
+        .close-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        .close-btn:hover {
+            background-color: #45a049;
+        }
+
+        /* Best Performer Flash Styles */
+        #bestPerformerFlash {
+            display: none;
+            background-color: lightskyblue;
+            color: #333;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        #bestPerformerFlash.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Employee Rewards System</h1>
+        <!-- Flash message for the best performer -->
+        <div id="bestPerformerFlash"></div>
+        <div class="employee-cards" id="employeeCards">
+            <!-- Employee cards will be inserted here dynamically -->
+        </div>
+    </div>
+
+    <!-- Employee Detail Popup Modal -->
+    <div id="employeeDetailModal" class="modal">
+        <div class="modal-content">
+            <h2>Employee Details: <span id="modalEmployeeName"></span></h2>
+            <p>Department: <span id="modalEmployeeDept"></span></p>
+            <p>Performance: <span id="modalEmployeePerformance"></span></p>
+            <p>Leave Count: <span id="modalEmployeeLeave"></span></p>
+            <p>Punctuality: <span id="modalEmployeePunctuality"></span></p>
+            <p>Total Points: <span id="modalEmployeePoints"></span></p>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const employees = [
+        { name: 'John Doe', department: 'HR', status: 'Working' },
+            { name: 'Jane Smith', department: 'Engineering', status: 'Afternoon shift' },
+            { name: 'Sam Wilson', department: 'Marketing', status: 'leave ' },
+            { name: 'Emily Davis', department: 'Finance', status: 'Working' },
+            { name: 'Michael Brown', department: 'Sales', status: 'Working' },
+            { name: 'Sarah Johnson', department: 'Legal', status: 'leave' },
+            { name: 'Chris Lee', department: 'IT', status: 'Working' },
+            { name: 'Anna Miller', department: 'Product', status: 'Working' },
+            { name: 'David Garcia', department: 'Support', status: 'Working' },
+            { name: 'Laura Martinez', department: 'Operations', status: 'Working' },
+            { name: 'Robert Wilson', department: 'R&D', status: 'Working' },
+            { name: 'Lisa Hernandez', department: 'Marketing', status: 'Working' },
+            { name: 'James Anderson', department: 'HR', status: 'shift leave' },
+            { name: 'Mary White', department: 'Finance', status: 'Working' },
+            { name: 'Paul Thompson', department: 'Engineering', status: 'Working' },
+            { name: 'Nancy Lewis', department: 'Product', status: 'Working' },
+            { name: 'Gary Young', department: 'Sales', status: 'Working' },
+            { name: 'Sandra Hall', department: 'Support', status: 'Working' },
+            { name: 'Kenneth Scott', department: 'IT', status: 'shift leave' },
+            { name: 'Betty King', department: 'Legal', status: 'Working' },
+            { name: 'Daniel Wright', department: 'R&D', status: 'Working' },
+            { name: 'Karen Green', department: 'Operations', status: 'Working' },
+            { name: 'Joseph Adams', department: 'Marketing', status: 'Working' },
+            { name: 'Dorothy Baker', department: 'HR', status: 'Working' },
+            { name: 'Mark Nelson', department: 'Finance', status: 'Working' },
+            { name: 'Margaret Carter', department: 'Engineering', status: 'Working' },
+            { name: 'Steven Mitchell', department: 'Product', status: 'Working' },
+            { name: 'Elizabeth Perez', department: 'Sales', status: 'Working' },
+            { name: 'Charles Turner', department: 'Support', status: 'leave' },
+            { name: 'Jessica Phillips', department: 'IT', status: 'Working' },
+            { name: 'Pauline Evans', department: 'Legal', status: 'Working' },
+            { name: 'Matthew Collins', department: 'R&D', status: 'Morning shift leave' },
+            { name: 'Emily Morris', department: 'Operations', status: 'Working' },
+            { name: 'Andrew Rogers', department: 'Marketing', status: 'Working' },
+            { name: 'Ashley Murphy', department: 'HR', status: 'Working' },
+            { name: 'Brian Bailey', department: 'Finance', status: 'Working' },
+            { name: 'Karen Cooper', department: 'Engineering', status: 'Working' },
+            { name: 'John Reed', department: 'Product', status: 'Working' },
+            { name: 'Jessica Stewart', department: 'Sales', status: 'Working' },
+            { name: 'David Morgan', department: 'Support', status: 'Working' },
+            { name: 'Linda Cook', department: 'IT', status: 'Working' },
+            { name: 'Richard Murphy', department: 'Legal', status: 'Working' },
+            { name: 'Nancy Rogers', department: 'R&D', status: 'Working' },
+            { name: 'George Price', department: 'Operations', status: 'Working' },
+            { name: 'Deborah Diaz', department: 'Marketing', status: 'Working' },
+            { name: 'James Foster', department: 'HR', status: 'Working' },
+            { name: 'Nancy Perry', department: 'Finance', status: 'Working' },
+            { name: 'Robert Hughes', department: 'Engineering', status: 'Working' },
+            { name: 'Sandra Ramirez', department: 'Product', status: 'Working' }
+        ];
+
+        // Function to assign random performance, leave count, and punctuality
+        function assignRandomValues(employees) {
+            employees.forEach(employee => {
+                employee.performance = Math.floor(Math.random() * 100);
+                employee.leaveCount = Math.floor(Math.random() * 5);
+                employee.punctuality = Math.floor(Math.random() * 100);
+                employee.points = calculatePoints(employee.performance, employee.leaveCount, employee.punctuality);
+            });
+        }
+
+        // Function to calculate points
+        function calculatePoints(performance, leaveCount, punctuality) {
+            return performance + (100 - leaveCount * 20) + punctuality;
+        }
+
+        // Assign random values to employees
+        assignRandomValues(employees);
+
+        // Function to get the best performer
+        function getBestPerformer(employees) {
+            return employees.reduce((best, current) => current.points > best.points ? current : best, employees[0]);
+        }
+
+        // Display the best performer flash
+        function displayBestPerformerFlash(bestPerformer) {
+            const flashMessage = document.getElementById('bestPerformerFlash');
+            flashMessage.innerText = `🏆 Best Performer: ${bestPerformer.name} with ${bestPerformer.points} points!`;
+            flashMessage.classList.add('show');
+        }
+
+        // Populate the employee cards
+        const employeeCards = document.getElementById('employeeCards');
+        employees.forEach((employee, index) => {
+            const card = document.createElement('div');
+            card.classList.add('employee-card');
+            card.innerHTML = `
+                <h2>${employee.name}</h2>
+                <p>Department: ${employee.department}</p>
+                <p>Status: ${employee.status}</p>
+                <span class="badge" onclick="showEmployeeDetails(${index})">🏅</span>
+            `;
+            employeeCards.appendChild(card);
+        });
+
+        // Show the best performer flash on page load
+        const bestPerformer = getBestPerformer(employees);
+        displayBestPerformerFlash(bestPerformer);
+
+        // Function to show employee details in the modal
+        function showEmployeeDetails(index) {
+            const employee = employees[index];
+            document.getElementById('modalEmployeeName').innerText = employee.name;
+            document.getElementById('modalEmployeeDept').innerText = employee.department;
+            document.getElementById('modalEmployeePerformance').innerText = employee.performance;
+            document.getElementById('modalEmployeeLeave').innerText = employee.leaveCount;
+            document.getElementById('modalEmployeePunctuality').innerText = employee.punctuality;
+            document.getElementById('modalEmployeePoints').innerText = employee.points;
+            document.getElementById('employeeDetailModal').style.display = 'flex';
+        }
+
+        // Close the modal function
+        function closeModal() {
+            document.getElementById('employeeDetailModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+
